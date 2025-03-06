@@ -1,0 +1,129 @@
+graph TD
+    %% Define Internet and WAN connections
+    Internet(("🌐 Internet")):::internet
+    
+    %% Define HQ Location
+    subgraph HQ["🏢 HQ Toronto"]
+        direction TB
+        
+        %% Edge devices
+        HQ_FW["🔒 Cisco ASA Firewall<br>HQ-FW-01"]:::firewall
+        HQ_Router["📡 HQ-RTR-01<br>Cisco 4321 Router"]:::router
+        
+        %% Core Network
+        HQ_Core["🔄 HQ-CORE-SW<br>Cisco 3650 L3 Switch"]:::core
+        
+        %% Distribution Network
+        HQ_Dist1["🔀 HQ-DIST-SW-01<br>Cisco 2960 L2 Switch"]:::distribution
+        HQ_Dist2["🔀 HQ-DIST-SW-02<br>Cisco 2960 L2 Switch"]:::distribution
+        
+        %% Access Network
+        HQ_Acc1["💻 HQ-ACC-SW-01<br>Cisco 2960 L2 Switch"]:::access
+        HQ_Acc2["💻 HQ-ACC-SW-02<br>Cisco 2960 L2 Switch"]:::access
+        
+        %% Server Infrastructure (HQ-Subnet 4: 172.17.3.160/27)
+        subgraph HQ_ServerRoom["🖥️ Server Room"]
+            direction LR
+            HQ_DC["DC/DNS<br>172.17.3.161"]:::server
+            HQ_File["File Server<br>172.17.3.162"]:::server
+            HQ_Web["Web Server<br>172.17.3.163"]:::server
+            HQ_DB["Database<br>172.17.3.164"]:::server
+            HQ_BackupSrv["Backup Server<br>172.17.3.165"]:::server
+        end
+        
+        %% Endpoints
+        subgraph HQ_VLAN10["VLAN 10 - Management<br>172.17.3.0/28"]
+            HQ_Mgmt1["👨‍💼 Admin PC<br>172.17.3.2"]:::endpoint
+            HQ_Mgmt2["📊 Network Monitor<br>172.17.3.3"]:::endpoint
+        end
+        
+        subgraph HQ_VLAN20["VLAN 20 - Corporate<br>172.17.3.16/25"]
+            HQ_Work1["💼 Finance<br>172.17.3.20"]:::endpoint
+            HQ_Work2["💼 Marketing<br>172.17.3.21"]:::endpoint
+            HQ_Work3["💼 Operations<br>172.17.3.22"]:::endpoint
+        end
+        
+        subgraph HQ_VLAN30["VLAN 30 - Printers<br>172.17.3.144/28"]
+            HQ_Print1["🖨️ Floor 1 Printer<br>172.17.3.145"]:::printer
+            HQ_Print2["🖨️ Floor 2 Printer<br>172.17.3.146"]:::printer
+        end
+        
+        %% HQ Network Connections
+        Internet --- HQ_FW
+        HQ_FW --- HQ_Router
+        HQ_Router --- HQ_Core
+        
+        HQ_Core --- HQ_Dist1
+        HQ_Core --- HQ_Dist2
+        HQ_Core --- HQ_ServerRoom
+        
+        HQ_Dist1 --- HQ_Acc1
+        HQ_Dist2 --- HQ_Acc2
+        
+        HQ_Acc1 --- HQ_VLAN10
+        HQ_Acc1 --- HQ_VLAN20
+        HQ_Acc2 --- HQ_VLAN30
+    end
+    
+    %% Define BR Location
+    subgraph BR["🏢 BR Oshawa"]
+        direction TB
+        
+        %% Edge devices
+        BR_FW["🔒 Cisco ASA Firewall<br>BR-FW-01"]:::firewall
+        BR_Router["📡 BR-RTR-01<br>Cisco 4321 Router"]:::router
+        
+        %% Core Network
+        BR_Core["🔄 BR-CORE-SW<br>Cisco 3650 L3 Switch"]:::core
+        
+        %% Access Network
+        BR_Acc1["💻 BR-ACC-SW-01<br>Cisco 2960 L2 Switch"]:::access
+        BR_Acc2["💻 BR-ACC-SW-02<br>Cisco 2960 L2 Switch"]:::access
+        
+        %% Endpoints
+        subgraph BR_VLAN10["VLAN 10 - Management<br>172.17.3.192/27"]
+            BR_Mgmt1["👨‍💼 BR Admin<br>172.17.3.193"]:::endpoint
+            BR_Mgmt2["📊 Monitor<br>172.17.3.194"]:::endpoint
+        end
+        
+        subgraph BR_VLAN20["VLAN 20 - Corporate<br>172.17.3.224/25"]
+            BR_Work1["💼 Sales<br>172.17.3.225"]:::endpoint
+            BR_Work2["💼 Support<br>172.17.3.226"]:::endpoint
+        end
+        
+        subgraph BR_VLAN30["VLAN 30 - Printers<br>172.17.4.96/27"]
+            BR_Print1["🖨️ Main Printer<br>172.17.4.97"]:::printer
+        end
+        
+        subgraph BR_VLAN40["VLAN 40 - HR+VPN<br>172.17.4.128/25"]
+            BR_HR1["👥 HR Workstation<br>172.17.4.129"]:::endpoint
+            BR_VPN1["🔑 VPN User<br>172.17.4.130"]:::endpoint
+        end
+        
+        %% BR Network Connections
+        Internet --- BR_FW
+        BR_FW --- BR_Router
+        BR_Router --- BR_Core
+        
+        BR_Core --- BR_Acc1
+        BR_Core --- BR_Acc2
+        
+        BR_Acc1 --- BR_VLAN10
+        BR_Acc1 --- BR_VLAN20
+        BR_Acc2 --- BR_VLAN30
+        BR_Acc2 --- BR_VLAN40
+    end
+    
+    %% Site-to-Site VPN Connection
+    HQ_Router <--->|"🔐 Site-to-Site VPN<br>IPsec Tunnel"| BR_Router
+    
+    %% Define styles
+    classDef internet fill:#F8F8FF,stroke:#2874A6,stroke-width:3px,color:#2874A6,font-weight:bold
+    classDef firewall fill:#FADBD8,stroke:#943126,stroke-width:2px,color:#943126,font-weight:bold
+    classDef router fill:#D6EAF8,stroke:#2E86C1,stroke-width:2px,color:#2E86C1,font-weight:bold
+    classDef core fill:#D4EFDF,stroke:#1E8449,stroke-width:2px,color:#1E8449,font-weight:bold
+    classDef distribution fill:#FCF3CF,stroke:#B7950B,stroke-width:2px,color:#B7950B,font-weight:bold
+    classDef access fill:#E8DAEF,stroke:#6C3483,stroke-width:2px,color:#6C3483,font-weight:bold
+    classDef server fill:#D5F5E3,stroke:#138D75,stroke-width:2px,color:#138D75,font-weight:bold
+    classDef endpoint fill:#FDEBD0,stroke:#BA4A00,stroke-width:1px,color:#BA4A00
+    classDef printer fill:#F5EEF8,stroke:#7D3C98,stroke-width:1px,color:#7D3C98
